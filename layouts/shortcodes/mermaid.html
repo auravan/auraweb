@@ -1,0 +1,21 @@
+{{/* layouts/shortcodes/mermaid.html */}}
+{{ $class := .Get "class" | default "" }}
+{{ $id := .Get "id" | default "" }}
+
+<div class="mermaid-wrapper {{ $class }}" {{ with $id }}id="{{ . }}"{{ end }}>
+  <div class="mermaid">
+    {{ .Inner }}
+  </div>
+</div>
+
+{{ if not (.Page.Scratch.Get "mermaid-loaded") }}
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ 
+    startOnLoad: true, 
+    theme: 'default',
+    flowchart: { useMaxWidth: false }
+  });
+</script>
+{{ .Page.Scratch.Set "mermaid-loaded" 1 }}
+{{ end }}

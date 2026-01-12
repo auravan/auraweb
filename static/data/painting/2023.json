@@ -1,0 +1,38 @@
+{
+    "justifiedGalleryOptions": {
+      "captions": true,
+      "captionSettings": {
+        "animationDuration": 400,
+        "visibleOpacity": 0.8,
+        "nonVisibleOpacity": 0.0
+      },
+      "cssAnimation": false,
+      "lastRow": "justify",
+      "margins": 6
+    },
+    "lightGalleryOptions": {
+      "autoplayFirstVideo": false,
+      "iframeMaxHeight": "90%",
+      "iframeMaxWidth": "90%"
+    },
+    "items": [
+      {
+        "alt": "黑白-星光-love-10",
+        "download": "黑白-星光-爱你-10.png",
+        "src": "/images/painting/black-white-love.png",
+        "thumb": "/images/painting/black-white-love.png"
+      },
+      {
+        "alt": "被观测的人-07",
+        "download": "被观察力.jpg",
+        "src": "/images/painting/be-seen.jpg",
+        "thumb": "/images/painting/be-seen.jpg"
+      },
+      {
+        "alt": "故障头-生日快乐",
+        "download": "灵气故障头.jpg",
+        "src": "/images/painting/glitch-head.jpg",
+        "thumb": "/images/painting/glitch-head.jpg"
+      }
+    ]
+  }

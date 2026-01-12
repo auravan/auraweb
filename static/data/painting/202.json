@@ -1,0 +1,26 @@
+{
+    "justifiedGalleryOptions": {
+      "captions": true,
+      "captionSettings": {
+        "animationDuration": 400,
+        "visibleOpacity": 0.8,
+        "nonVisibleOpacity": 0.0
+      },
+      "cssAnimation": false,
+      "lastRow": "justify",
+      "margins": 6
+    },
+    "lightGalleryOptions": {
+      "autoplayFirstVideo": false,
+      "iframeMaxHeight": "90%",
+      "iframeMaxWidth": "90%"
+    },
+    "items": [
+      {
+        "alt": "我看着颗猕猴桃-hanhan",
+        "download": "mihoto.png",
+        "src": "/images/painting/mohoto.jpg",
+        "thumb": "/images/painting/mohoto.jpg"
+      }
+    ]
+  }

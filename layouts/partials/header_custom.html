@@ -1,0 +1,102 @@
+{{ with .Site.Config.Services.GoogleAnalytics.ID }}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ . }}"></script>
+<script>
+if (window.location.hostname == "leovan.me") {
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '{{ . }}');
+}
+</script>
+{{ end }}
+
+{{/* 移除了 not .IsHome，确保首页也能显示公式；强制检测常见符号 */}}
+{{ if and (and (not .Params.disable_mathjax) (ne .Kind "404")) (or (in (string .Content) "\\") (in (string .Content) "$") (in (string .Content) "math")) }}
+<script>
+window.MathJax = {
+  loader: {
+    load: ['[tex]/boldsymbol']
+  },
+  tex: {
+    tags: "all",
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$']],
+    processEscapes: true,
+    processEnvironments: true,
+    packages: {
+      '[+]': ['boldsymbol']
+    }
+  },
+  options: {
+    /* 忽略某些不应渲染的标签，防止手机端脚本冲突 */
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  startup: {
+    ready: () => {
+      // 这里的逻辑修复了移动端加载过快导致的渲染失效
+      MathJax.startup.defaultReady();
+      MathJax.startup.promise.then(() => {
+        console.log('MathJax initial typesetting complete');
+      });
+      
+      // 针对异步加载内容的补充渲染
+      const triggerRender = () => {
+        if (typeof MathJax.typesetPromise === 'function') {
+          MathJax.typesetPromise();
+        }
+      };
+
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        triggerRender();
+      } else {
+        document.addEventListener('DOMContentLoaded', triggerRender);
+      }
+    }
+  }
+};
+</script>
+{{/* 1. 强制使用 https 2. 使用 tex-mml-chtml 提高移动端兼容性 */}}
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@{{ default "3" $.Site.Params.mathjaxVersion }}/es5/tex-mml-chtml.js" crossorigin="anonymous"></script>
+
+{{/* 修复手机端公式太长被切断的问题 */}}
+<style>
+  mjx-container {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    max-width: 100% !important;
+    padding: 0.5em 0;
+  }
+</style>
+{{ end }}
+{{ if and (and (and (not .Params.disable_prismjs) (ne .Kind "404")) (not .IsHome)) (in (string .Content) "</pre>") }}
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/prismjs@{{ $.Site.Params.prismjsVersion }}/themes/prism.min.css">
+{{ end }}
+
+{{ if and (and (and (not .Params.disable_adsense) (ne .Kind "404")) (not .IsHome)) .Content }}
+{{ with $.Site.Params.googleAdsense }}
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ . }}" crossorigin="anonymous"></script>
+{{ end }}
+{{ end }}
+
+<link rel="stylesheet" type="text/css" href="{{ "/css/fonts.css" | relURL }}">
+<link rel="stylesheet" type="text/css" href="{{ "/css/style.css" | relURL }}">
+<link rel="stylesheet" type="text/css" href="{{ "/css/icons.css" | relURL }}">
+<link rel="stylesheet" type="text/css" href="{{ "/css/print.css" | relURL }}">
+
+{{ if (and .IsPage (not .Params.disable_donate)) }}
+<link rel="stylesheet" type="text/css" href="{{ "/css/donate.css" | relURL }}">
+{{ end }}
+
+{{ if $.Page.Scratch.Get "aplayer" }}
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/aplayer@{{ $.Site.Params.APlayerVersion }}/dist/APlayer.min.css">
+<script src="https://cdn.jsdelivr.net/npm/aplayer@{{ $.Site.Params.APlayerVersion }}/dist/APlayer.min.js"></script>
+{{ end }}
+
+{{ if $.Page.Scratch.Get "metingjs" }}
+<script src="https://cdn.jsdelivr.net/npm/@xizeyoupan/meting@{{ $.Site.Params.meetingjsVersion }}/dist/Meting.min.js"></script>
+{{ end }}
+
+{{ if $.Page.Scratch.Get "gallery" }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@{{ $.Site.Params.justifiedgalleryVersion }}/dist/css/justifiedGallery.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@{{ $.Site.Params.lightgalleryVersion }}/css/lightgallery-bundle.min.css"/>
+{{ end }}

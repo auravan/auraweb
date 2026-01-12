@@ -1,0 +1,327 @@
+.material-symbols {
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  vertical-align: middle;
+  line-height: 1em;
+}
+
+.material-symbols::before {
+  display: inline-block;
+  background-size: auto 1em;
+  background-repeat: no-repeat;
+  background-position: center center;
+  font-size: inherit;
+  width: 1em;
+  height: 1em;
+  line-height: 1em;
+  content: '';
+}
+
+.material-symbols-groups-outline::before {
+  background-image: url('../images/icons/material-symbols/light/groups-outline.svg');
+}
+.dark .material-symbols-groups-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/groups-outline.svg');
+}
+
+.material-symbols-target-outline::before {
+  background-image: url('../images/icons/material-symbols/light/target-outline.svg');
+}
+.dark .material-symbols-target-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/target-outline.svg');
+}
+
+.material-symbols-list-alt-outline::before {
+  background-image: url('../images/icons/material-symbols/light/list-alt-outline.svg');
+}
+.dark .material-symbols-list-alt-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/list-alt-outline.svg');
+}
+
+.material-symbols-settings-outline::before {
+  background-image: url('../images/icons/material-symbols/light/settings-outline.svg');
+}
+.dark .material-symbols-settings-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/settings-outline.svg');
+}
+
+.material-symbols-download-outline::before {
+  background-image: url('../images/icons/material-symbols/light/download-outline.svg');
+}
+.dark .material-symbols-download-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/download-outline.svg');
+}
+
+.material-symbols-play-outline::before {
+  background-image: url('../images/icons/material-symbols/light/play-outline.svg');
+}
+.dark .material-symbols-play-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/play-outline.svg');
+}
+
+.material-symbols-pause-outline::before {
+  background-image: url('../images/icons/material-symbols/light/pause-outline.svg');
+}
+.dark .material-symbols-pause-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/pause-outline.svg');
+}
+
+.material-symbols-school-outline::before {
+  background-image: url('../images/icons/material-symbols/light/school-outline.svg');
+}
+.dark .material-symbols-school-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/school-outline.svg');
+}
+
+.material-symbols-award-star-outline::before {
+  background-image: url('../images/icons/material-symbols/light/award-star-outline.svg');
+}
+.dark .material-symbols-award-star-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/award-star-outline.svg');
+}
+
+.material-symbols-skip-next-outline::before {
+  background-image: url('../images/icons/material-symbols/light/skip-next-outline.svg');
+}
+.dark .material-symbols-skip-next-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/skip-next-outline.svg');
+}
+
+.material-symbols-skip-previous-outline::before {
+  background-image: url('../images/icons/material-symbols/light/skip-previous-outline.svg');
+}
+.dark .material-symbols-skip-previous-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/skip-previous-outline.svg');
+}
+
+.material-symbols-star-outline::before {
+  background-image: url('../images/icons/material-symbols/light/star-outline.svg');
+}
+.dark .material-symbols-star-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/star-outline.svg');
+}
+
+.material-symbols-star-fill::before {
+  background-image: url('../images/icons/material-symbols/light/star-fill.svg');
+}
+.dark .material-symbols-star-fill::before {
+  background-image: url('../images/icons/material-symbols/dark/star-fill.svg');
+}
+
+.material-symbols-dark-mode-outline::before {
+  background-image: url('../images/icons/material-symbols/light/dark-mode-outline.svg');
+}
+.dark .material-symbols-dark-mode-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/dark-mode-outline.svg');
+}
+
+.material-symbols-light-mode-outline::before {
+  background-image: url('../images/icons/material-symbols/light/light-mode-outline.svg');
+}
+.dark .material-symbols-light-mode-outline::before {
+  background-image: url('../images/icons/material-symbols/dark/light-mode-outline.svg');
+}
+
+/* custom icons */
+.icon {
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1em;
+}
+
+.icon::before {
+  display: inline-block;
+  background-size: auto 1em;
+  background-repeat: no-repeat;
+  background-position: center center;
+  width: 1em;
+  height: 1em;
+  line-height: 1em;
+  content: '';
+  margin-right: 4px;
+  vertical-align: bottom;
+}
+
+.icon-adobe::before {
+  width: 1.2em;
+  background-image: url('../images/icons/custom/adobe.svg');
+}
+
+.icon-airbnb::before {
+  background-image: url('../images/icons/custom/airbnb.svg');
+}
+
+.icon-alibaba::before {
+  width: 2em;
+  background-image: url('../images/icons/custom/alibaba.svg');
+}
+
+.icon-ant-group::before {
+  width: 0.8em;
+  background-image: url('../images/icons/custom/ant-group.svg');
+}
+
+.icon-apple::before {
+  background-image: url('../images/icons/custom/apple.svg');
+}
+
+.icon-c::before {
+  background-image: url('../images/icons/custom/c.svg');
+}
+
+.icon-caffe2::before {
+  background-image: url('../images/icons/custom/caffe2.svg');
+}
+
+.icon-cpp::before {
+  background-image: url('../images/icons/custom/cpp.svg');
+}
+
+.icon-facebook::before {
+  background-image: url('../images/icons/custom/facebook.svg');
+}
+
+.icon-firefox::before {
+  background-image: url('../images/icons/custom/firefox.svg');
+}
+
+.icon-go::before {
+  width: 2.2em;
+  background-size: auto 0.8em;
+  background-image: url('../images/icons/custom/go.svg');
+}
+
+.icon-google::before {
+  background-image: url('../images/icons/custom/google.svg');
+}
+
+.icon-ibm::before {
+  width: 2.5em;
+  background-image: url('../images/icons/custom/ibm.svg');
+}
+
+.icon-java::before {
+  background-image: url('../images/icons/custom/java.svg');
+}
+
+.icon-javascript::before {
+  background-image: url('../images/icons/custom/javascript.svg');
+}
+
+.icon-julia::before {
+  width: 1.6em;
+  background-image: url('../images/icons/custom/julia.svg');
+}
+
+.icon-keras::before {
+  background-image: url('../images/icons/custom/keras.svg');
+}
+
+.icon-linux::before {
+  background-image: url('../images/icons/custom/linux.svg');
+}
+
+.icon-macos::before {
+  background-image: url('../images/icons/custom/macos.svg');
+}
+
+.icon-microsoft::before {
+  background-image: url('../images/icons/custom/microsoft.svg');
+}
+
+.icon-mxnet::before {
+  background-image: url('../images/icons/custom/mxnet.png');
+}
+
+.icon-nodejs::before {
+  width: 1.6em;
+  background-image: url('../images/icons/custom/nodejs.svg');
+}
+
+.icon-paddlepaddle::before {
+  width: 1.85em;
+  background-image: url('../images/icons/custom/paddlepaddle.png');
+}
+
+.icon-python::before {
+  background-image: url('../images/icons/custom/python.svg');
+}
+
+.icon-pytorch::before {
+  background-image: url('../images/icons/custom/pytorch.svg');
+}
+
+.icon-qq::before {
+  width: 0.8em;
+  background-image: url('../images/icons/custom/qq.svg');
+}
+
+.icon-qt::before {
+  width: 1.2em;
+  background-size: auto 0.8em;
+  background-image: url('../images/icons/custom/qt.svg');
+}
+
+.icon-r::before {
+  width: 1.1em;
+  background-size: auto 0.8em;
+  background-image: url('../images/icons/custom/r.svg');
+}
+
+.icon-react::before {
+  width: 1.2em;
+  background-size: auto 0.9em;
+  background-image: url('../images/icons/custom/react.svg');
+}
+
+.icon-restful::before {
+  background-image: url('../images/icons/custom/restful.png');
+}
+
+.icon-ruby::before {
+  width: 0.8em;
+  background-size: auto 0.8em;
+  background-image: url('../images/icons/custom/ruby.svg');
+}
+
+.icon-rust::before {
+  background-image: url('../images/icons/custom/rust.svg');
+}
+
+.icon-salesforce::before {
+  width: 1.5em;
+  background-image: url('../images/icons/custom/salesforce.svg');
+}
+
+.icon-spark::before {
+  background-image: url('../images/icons/custom/spark.svg');
+}
+
+.icon-sonnet::before {
+  background-image: url('../images/icons/custom/sonnet.png');
+}
+
+.icon-swift::before {
+  background-image: url('../images/icons/custom/swift.svg');
+}
+
+.icon-tensorflow::before {
+  background-image: url('../images/icons/custom/tensorflow.svg');
+}
+
+.icon-typescript::before {
+  background-image: url('../images/icons/custom/typescript.svg');
+}
+
+.icon-wechat::before {
+  width: 1.2em;
+  background-image: url('../images/icons/custom/wechat.svg');
+}
+
+.icon-windows::before {
+  background-image: url('../images/icons/custom/windows.svg');
+}

@@ -1,0 +1,20 @@
+{{ if and (not .Params.disable_comments) (or (eq .Kind "404") (and (not .IsHome) .Content)) }}
+<section class="comments">
+<script {{ if $.Site.BuildDrafts }}data-{{ end }}
+src="https://giscus.app/client.js"
+data-repo="auravan/auravan.github.io"
+data-repo-id="R_kgDOJ2p3cw"
+data-category="Announcements"
+data-category-id="DIC_kwDOJ2p3c84C0Vvz"
+data-mapping="url"
+data-strict="0"
+data-reactions-enabled="1"
+data-emit-metadata="0"
+data-input-position="bottom"
+data-theme="preferred_color_scheme"
+data-lang="zh-CN"
+crossorigin="anonymous"
+async>
+</script>
+</section>
+{{ end }}

@@ -1,0 +1,35 @@
+.text-red { color: red; }
+/* 添加到你的主题 CSS 文件 */
+.mermaid-wrapper {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.mermaid-wrapper.center {
+  justify-content: center;
+}
+
+.mermaid-wrapper.left {
+  justify-content: flex-start;
+}
+
+.mermaid-wrapper.right {
+  justify-content: flex-end;
+}
+
+.mermaid-wrapper.bordered {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.mermaid-wrapper.shadow {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mermaid {
+  min-width: 600px;
+}

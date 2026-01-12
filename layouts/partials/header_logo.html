@@ -1,0 +1,6 @@
+{{ $lang := "cn" }}
+{{ if (eq .Section "en") }}
+{{ $lang = "en" }}
+{{ end }}
+<div class="logo"><img src="{{ "/images/web/icon-512x512.png" | relURL }}" alt="logo"></div>
+<p class="slogan">{{ index $.Site.Params.lang.slogan $lang }}</p>
