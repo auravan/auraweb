@@ -13,7 +13,6 @@ disable_comments: true
 disable_adsense: true
 disable_mathjax: false
 disable_prismjs: true
-mermaid: true
 ---
 个人表现在他人眼中是粒子性强还是波动性强是有客观判断的。
 
