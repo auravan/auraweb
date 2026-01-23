@@ -1,5 +1,26 @@
 "use strict";
 (() => {
+  var __async = (__this, __arguments, generator) => {
+    return new Promise((resolve, reject) => {
+      var fulfilled = (value) => {
+        try {
+          step(generator.next(value));
+        } catch (e) {
+          reject(e);
+        }
+      };
+      var rejected = (value) => {
+        try {
+          step(generator.throw(value));
+        } catch (e) {
+          reject(e);
+        }
+      };
+      var step = (x) => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+      step((generator = generator.apply(__this, __arguments)).next());
+    });
+  };
+
   // src/script/Game17_time.ts
   var RhythmGame = class {
     constructor() {
@@ -19,6 +40,8 @@
       // 新增：音乐开始的延迟时间，单位为毫秒
       this.MUSIC_START_DELAY_MS = 0;
       this.musicUrl = "res/music/bell_500.mp3";
+      this.loadingProgress = 0;
+      this.resourcesLoaded = false;
       this.inlineMidiData = {
         "header": {
           "keySignatures": [
@@ -41573,12 +41596,233 @@
           }
         ]
       };
-      this.initializeGame();
+      console.log("RhythmGame 构造函数开始");
+      this.showLoadingScreen();
+      this.loadAllResources().then(() => {
+        console.log("✅ 所有资源加载完成");
+        this.resourcesLoaded = true;
+        this.hideLoadingScreen();
+        this.initializeGame();
+      }).catch((error) => {
+        console.error("❌ 资源加载失败请退回多次重试:", error);
+        this.showLoadingError();
+      });
     }
+    /**
+     * 显示加载界面
+     */
+    showLoadingScreen() {
+      this.loadingUI = new Laya.Sprite();
+      this.loadingUI.graphics.drawRect(0, 0, Laya.stage.width, Laya.stage.height, "#0f0c29");
+      this.loadingUI.alpha = 1;
+      const loadingText = new Laya.Text();
+      loadingText.text = "加载李斯特-钟游戏资源...";
+      loadingText.fontSize = 28;
+      loadingText.color = "#ffffff";
+      loadingText.width = Laya.stage.width;
+      loadingText.align = "center";
+      loadingText.y = Laya.stage.height / 2 - 30;
+      this.loadingUI.addChild(loadingText);
+      const progressBarBg = new Laya.Sprite();
+      progressBarBg.graphics.drawRect(0, 0, 300, 20, "#333333");
+      progressBarBg.pos((Laya.stage.width - 300) / 2, Laya.stage.height / 2 + 20);
+      this.loadingUI.addChild(progressBarBg);
+      const progressBar = new Laya.Sprite();
+      progressBar.graphics.drawRect(0, 0, 0, 20, "#00ffff");
+      progressBar.pos((Laya.stage.width - 300) / 2, Laya.stage.height / 2 + 20);
+      this.loadingUI.addChild(progressBar);
+      const progressText = new Laya.Text();
+      progressText.text = "0%";
+      progressText.fontSize = 20;
+      progressText.color = "#ffffff";
+      progressText.width = Laya.stage.width;
+      progressText.align = "center";
+      progressText.y = Laya.stage.height / 2 + 50;
+      this.loadingUI.addChild(progressText);
+      Laya.stage.addChild(this.loadingUI);
+      this.loadingUI.progressBar = progressBar;
+      this.loadingUI.progressText = progressText;
+    }
+    /**
+     * 更新加载进度
+     */
+    updateLoadingProgress(progress, message) {
+      this.loadingProgress = progress;
+      if (this.loadingUI) {
+        const progressBar = this.loadingUI.progressBar;
+        const progressText = this.loadingUI.progressText;
+        if (progressBar) {
+          Laya.Tween.to(progressBar, { width: 300 * (progress / 100) }, 200);
+        }
+        if (progressText) {
+          progressText.text = `${Math.round(progress)}% ${message || ""}`;
+        }
+      }
+    }
+    /**
+     * 隐藏加载界面
+     */
+    hideLoadingScreen() {
+      if (this.loadingUI && this.loadingUI.parent) {
+        this.loadingUI.removeSelf();
+        this.loadingUI = null;
+      }
+    }
+    /**
+     * 显示加载错误
+     */
+    showLoadingError() {
+      if (this.loadingUI) {
+        const errorText = new Laya.Text();
+        errorText.text = "资源加载失败，3秒后返回主菜单";
+        errorText.fontSize = 24;
+        errorText.color = "#ff5555";
+        errorText.width = Laya.stage.width;
+        errorText.align = "center";
+        errorText.y = Laya.stage.height / 2 + 100;
+        this.loadingUI.addChild(errorText);
+        Laya.timer.once(3e3, this, () => {
+          this.returnToWelcomeScene();
+        });
+      }
+    }
+    /**
+     * 加载所有资源
+     */
+    loadAllResources() {
+      return __async(this, null, function* () {
+        console.log("开始加载所有游戏资源...");
+        this.updateLoadingProgress(10, "正在加载音乐...");
+        yield this.loadMusicResource();
+        this.updateLoadingProgress(40, "正在初始化场景...");
+        this.createGameScene();
+        this.updateLoadingProgress(60, "正在处理音乐数据...");
+        this.processMidiData();
+        this.updateLoadingProgress(80, "正在准备游戏事件...");
+        yield this.prepareEventData();
+        this.updateLoadingProgress(100, "加载完成!");
+        yield new Promise((resolve) => Laya.timer.once(500, this, resolve));
+      });
+    }
+    /**
+     * 加载音乐资源
+     */
+    loadMusicResource() {
+      return new Promise((resolve, reject) => {
+        console.log("正在加载音乐文件...");
+        Laya.loader.load(
+          this.musicUrl,
+          // 1. url
+          Laya.Handler.create(this, () => {
+            console.log("✅ 音乐文件加载成功");
+            this.updateLoadingProgress(25, "音乐加载完成");
+            resolve();
+          }),
+          Laya.Handler.create(this, (progress) => {
+            const p = 10 + progress * 15;
+            this.updateLoadingProgress(p, `加载音乐 ${Math.round(progress * 100)}%`);
+          }),
+          Laya.Loader.SOUND,
+          // 4. type
+          1,
+          // 5. priority
+          true,
+          // 6. cache
+          null,
+          // 7. group
+          false,
+          // 8. ignoreCache
+          false
+          // 9. useWorkerLoader
+          // 注意：这里没有error参数的位置！
+        );
+        Laya.timer.once(1e4, this, () => {
+          const loaded = Laya.loader.getRes(this.musicUrl);
+          if (!loaded) {
+            console.error("❌ 音乐文件加载超时");
+            reject(new Error("音乐加载超时"));
+          }
+        });
+      });
+    }
+    /**
+     * 处理MIDI数据
+     */
+    processMidiData() {
+      console.log("处理MIDI数据...");
+      if (!this.inlineMidiData) {
+        throw new Error("未找到内联的MIDI数据");
+      }
+      this.rawMidiData = this.inlineMidiData;
+      if (this.rawMidiData && this.rawMidiData.header) {
+        console.log("✅ MIDI数据格式正确");
+      } else {
+        throw new Error("内联的MIDI数据格式不正确");
+      }
+    }
+    /**
+     * 准备事件数据
+     */
+    prepareEventData() {
+      return new Promise((resolve) => {
+        console.log("准备游戏事件数据...");
+        if (!this.rawMidiData) {
+          resolve();
+          return;
+        }
+        const allNotes = this.getAllNotesFromTracks(this.rawMidiData);
+        this.eventData = this.createUnifiedEventData(this.rawMidiData, allNotes);
+        console.log(`✅ 事件数据已准备好，总事件数: ${this.eventData.length}`);
+        resolve();
+      });
+    }
+    /**
+     * 初始化游戏（资源加载完成后调用）
+     */
     initializeGame() {
-      this.createGameScene();
-      this.loadMusic();
+      console.log("开始初始化游戏...");
+      this.startMusicAndEvents();
     }
+    // ========== 以下是原有方法，保持不变 ==========
+    // private createGameScene(): void {
+    //     console.log("创建游戏场景...");
+    //     Laya.stage.removeChildren();
+    //     this.createBackground();
+    //     this.createOrbitRing();
+    //     this.createSpiral();
+    //     this.createOrbitLines();
+    //     this.centerPoint = new Laya.Point(Laya.stage.width / 2, Laya.stage.height / 2);
+    //     this.createAllInteractivePoints();
+    //     this.createPauseButton();
+    // }
+    // private startMusicAndEvents(): void {
+    //     console.log("音乐和事件将在 " + this.MUSIC_START_DELAY_MS + "ms 后开始...");
+    //     Laya.timer.clearAll(this);
+    //     Laya.timer.once(this.MUSIC_START_DELAY_MS, this, () => {
+    //         console.log("音乐开始播放...");
+    //         this.musicChannel = Laya.SoundManager.playMusic(this.musicUrl, 1);
+    //         // 添加音乐播放完成监听
+    //         if (this.musicChannel) {
+    //             this.musicChannel.on(Laya.Event.COMPLETE, this, () => {
+    //                 console.log("音乐播放完成");
+    //             });
+    //         }
+    //         Laya.timer.loop(10, this, this.checkMidiEvents);
+    //     });
+    // }
+    returnToWelcomeScene() {
+      Laya.timer.clearAll(this);
+      if (this.musicChannel) {
+        this.musicChannel.stop();
+        this.musicChannel = null;
+      }
+      Laya.stage.removeChildren();
+      new WelcomeScene();
+    }
+    // private initializeGame(): void {
+    //     this.createGameScene();
+    //     this.loadMusic();
+    // }
     loadMusic() {
       console.log("正在加载音乐...");
       Laya.loader.load(this.musicUrl, Laya.Handler.create(this, this.onMusicLoaded), null, Laya.Loader.SOUND);
@@ -42660,7 +42904,7 @@
       const mainTitle = this.createText("Spiral Chord", 56, "#ffffff");
       mainTitle.pos(Laya.stage.width / 2 - mainTitle.width / 2, Laya.stage.height / 2 - 200);
       Laya.stage.addChild(mainTitle);
-      const subtitle = this.createText("create by auravan", 32, "#00ffff");
+      const subtitle = this.createText("created by auravan", 32, "#00ffff");
       subtitle.pos(Laya.stage.width / 2 - subtitle.width / 2, Laya.stage.height / 2 - 140);
       Laya.stage.addChild(subtitle);
       const startButton = this.createStartButton();
@@ -42749,12 +42993,6 @@
           4
         );
         button.addChild(buttonText);
-      });
-      button.on(Laya.Event.MOUSE_DOWN, this, () => {
-        console.log("鼠标按下按钮");
-      });
-      button.on(Laya.Event.MOUSE_UP, this, () => {
-        console.log("鼠标抬起按钮");
       });
       return button;
     }
@@ -42861,11 +43099,16 @@
     constructor() {
       this.landscapeTip = null;
       this.isMobile = false;
-      const designWidth = 800;
-      const designHeight = 600;
-      Laya.init(designWidth, designHeight).then(() => {
-        const actualWidth = Laya.Browser.clientWidth;
-        const actualHeight = Laya.Browser.clientHeight;
+      const dpr = window.devicePixelRatio || 1;
+      console.log("设备像素比 (DPR):", dpr);
+      const designWidth = 1920;
+      const designHeight = 1080;
+      Laya.init(designWidth * 2, designHeight * 2).then(() => __async(this, null, function* () {
+        Laya.Config.isAntialias = true;
+        Laya.Config.isAlpha = true;
+        Laya.Config.preserveDrawingBuffer = true;
+        const actualWidth = Laya.Browser.clientWidth * dpr;
+        const actualHeight = Laya.Browser.clientHeight * dpr;
         console.log("实际窗口尺寸:", actualWidth, actualHeight);
         this.isMobile = this.detectMobileDevice();
         Laya.stage.size(actualWidth, actualHeight);
@@ -42875,8 +43118,9 @@
         if (this.isMobile) {
           this.setupMobileOptimization();
         }
+        yield this.preloadMusic();
         new WelcomeScene();
-      });
+      }));
     }
     /**
      * 检测是否为移动设备
@@ -43002,6 +43246,39 @@
       if (this.landscapeTip) {
         this.landscapeTip.visible = false;
       }
+    }
+    /**
+     * 预加载音频资源
+     */
+    preloadMusic() {
+      return __async(this, null, function* () {
+        console.log("开始预加载音频资源...");
+        const musicUrl = "res/music/main.mp3";
+        return new Promise((resolve) => {
+          Laya.loader.load(
+            {
+              url: musicUrl,
+              type: Laya.Loader.SOUND
+            },
+            Laya.Handler.create(this, () => {
+              console.log("✅ 音频资源预加载完成");
+              resolve();
+            }),
+            null,
+            // progressHandler
+            null,
+            // type (已在上面的对象中指定)
+            1,
+            // priority
+            true,
+            // cache
+            "music",
+            // group
+            false
+            // ignoreCache
+          );
+        });
+      });
     }
   };
   new Main();

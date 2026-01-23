@@ -100,7 +100,7 @@ menu:
 
 params:
   description: "李崎滨的个人网站 | Build with Hugo"
-  footer: "第{visit_count}位访问者你好 Copyright &copy; 2024-{Year} [李崎滨 | Aura Van]"
+  footer: "Copyright &copy; 2024-{Year} [李崎滨 | Aura Van]|您是第{visit_count}位访问者"
   # licenseURL: "https://github.com/leovan/leovan.me/blob/main/LICENSE"
   googleAdsense: "ca-pub-1217183586241699"
   categories: "分类 | Categories"

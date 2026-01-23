@@ -30,3 +30,4 @@ disable_prismjs: true
 (更新于2025.11.4)
 另外附其他J.P.Bourguignon先生的[采访](https://euromathsoc.org/magazine/articles/209#S0.SSx4)，我尤其重视这一段话。
 ![](/images/50AB3BE3-5E55-4D5C-987E-B7C86282E63E_4_5005_c.jpeg)
+陈省生先生在香港科技大学的一次[talk](https://b23.tv/yNsbedk)，里面有不少趣事。这是他最后一年的光阴，他自顾自地说了一句我还有多少时间，不曾想当年便驾鹤西去。

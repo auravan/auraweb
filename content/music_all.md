@@ -2,7 +2,7 @@
 title: 我的音乐事业
 author: 李崎滨
 date: '2025-12-05'
-slug: music
+slug: music_all
 disable_author_date: true
 disable_donate: true
 disable_comments: true
@@ -10,6 +10,7 @@ disable_adsense: true
 disable_mathjax: true
 disable_prismjs: true
 ---
+这个自建的demo[网站](/spiralchorddemov2/index.html)，推荐电脑网页端访问。用来可视化midi音符。12根线和等角螺线构成音符。由于托管在本地个人电脑，加载速度可能慢到你怀疑人生。
 
 这是我写的音乐演奏家的markov图（随意填写，如果你按此模拟，练习，排练，演出的大概比例是2.5:1.6:5.8）
 
