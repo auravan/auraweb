@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>SpiralChord  - AuraVan</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #050505; font-family: 'Segoe UI', sans-serif; }
+        #info { 
+            position: absolute; top: 15px; left: 15px; color: #00ffff; 
+            background: rgba(0,0,0,0.85); padding: 15px; border: 1px solid #00aaaa; 
+            border-radius: 10px; font-size: 13px; z-index: 100; min-width: 200px;
+        }
+        #chord-list-container {
+            position: absolute; bottom: 135px; right: 15px; width: 260px; max-height: 45vh;
+            background: rgba(0, 20, 20, 0.9); border: 1px solid #00aaaa; border-radius: 10px;
+            color: #00ffff; display: flex; flex-direction: column; z-index: 100;
+        }
+        #chord-items { overflow-y: auto; padding: 8px; }
+        .chord-item {
+            padding: 10px; margin: 5px 0; background: rgba(0, 255, 255, 0.1);
+            border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+        }
+        .chord-item:hover { background: rgba(0, 255, 255, 0.2); }
+        .del-btn { color: #ff4444; font-weight: bold; padding: 5px; cursor: pointer; font-size: 16px; margin-left: 10px; }
+        
+        #bottom-panel { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 1000; background: #000; }
+        #progress-wrapper { width: 100%; height: 20px; background: #111; cursor: pointer; border-top: 1px solid #00aaaa; display: flex; align-items: center; }
+        #progress-fill { height: 100%; background: linear-gradient(90deg, #005555, #00ffff); width: 0%; box-shadow: 0 0 10px #00ffff; pointer-events: none; }
+        
+        #piano-roll { width: 100%; height: 60px; display: flex; background: #050505; border-top: 1px solid #333; }
+        .key { flex: 1; border-right: 1px solid #222; background: #eee; box-sizing: border-box; }
+        .key.black { background: #222; flex: 0.6; margin: 0 -0.3%; height: 65%; z-index: 2; border: 1px solid #000; }
+        .key.active { background: #00ffff !important; box-shadow: 0 0 15px #00ffff; }
+
+        .ui-btn { background: #00aaaa; color: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; border: none; font-size: 11px; margin-top: 5px; }
+        #start-overlay { position: fixed; inset: 0; background: #050505; display: flex; justify-content: center; align-items: center; z-index: 9999; cursor: pointer; color: #00ffff; }
+    </style>
+</head>
+<body>
+    <div id="start-overlay" onclick="startSystem()">
+        <div style="text-align: center;">
+            <h1 style="font-weight: 200; letter-spacing: 5px;">SPIRAL CHORD V23</h1>
+            <p>点击开启</p>
+        </div>
+    </div>
+
+    <div id="info">
+        <b>SpiralChord V23.0</b><br>
+        <button class="ui-btn" onclick="document.getElementById('midi-upload').click()">打开 MIDI</button>
+        <button id="pause-btn" class="ui-btn" onclick="togglePause()" disabled>暂停</button>
+        <span id="time-display" style="margin-left:10px; font-family:monospace;">0:00</span>
+        <input type="file" id="midi-upload" accept=".mid,.midi" style="display:none">
+    </div>
+
+    <div id="chord-list-container">
+        <div style="padding:10px; border-bottom:1px solid #005555; font-size:12px; color:#aaa;">捕捉列表 (全参数同步)</div>
+        <div id="chord-items"></div>
+    </div>
+
+    <div id="bottom-panel">
+        <div id="progress-wrapper">
+            <div id="progress-fill"></div>
+        </div>
+        <div id="piano-roll"></div>
+    </div>
+
+<script src="https://unpkg.com/tone@14.7.77/build/Tone.js"></script>
+<script src="https://unpkg.com/@tonejs/midi"></script>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+    const params = { 
+        initialRadius: 1, growthRate: 0.04, heightStep: 1.5, octaves: 8, 
+        attack: 0.01, sustain: 0.2, release: 0.8, volume: -20, 
+        polyOpacity: 0.4, bgColor: '#050505', baseNote: 21,
+        rotationSpeed: 0.001,
+        nodeSize: 0.15 // 新增节点大小参数
+    };
+
+    let trackSynths = [], activeParts = [], allNotePoints = [], activeIndices = new Set(), savedFingerprints = new Set();
+    let polygonMesh, spiralLine, isPaused = false, isDragging = false, midiDuration = 0, currentMidiData = null;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const compressor = new Tone.Compressor({ threshold: -30, ratio: 12 }).toDestination();
+
+    const pianoRoll = document.getElementById('piano-roll');
+    const keyNodes = [];
+    for (let i = 21; i <= 108; i++) {
+        const isBlack = [1, 3, 6, 8, 10].includes(i % 12);
+        const k = document.createElement('div');
+        k.className = `key ${isBlack ? 'black' : ''}`;
+        pianoRoll.appendChild(k);
+        keyNodes[i] = k;
+    }
+
+    window.startSystem = async function() {
+        document.getElementById('start-overlay').style.display = 'none';
+        await Tone.start();
+        init();
+    }
+
+    async function playMidi(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const MidiClass = window.Midi ? (window.Midi.Midi || window.Midi) : null;
+            currentMidiData = new MidiClass(e.target.result);
+            midiDuration = currentMidiData.duration;
+            
+            Tone.Transport.stop(); Tone.Transport.cancel();
+            activeParts.forEach(p => p.dispose()); trackSynths.forEach(s => s.dispose());
+            activeParts = []; trackSynths = []; activeIndices.clear();
+
+            currentMidiData.tracks.forEach(track => {
+                if (track.notes.length === 0) return;
+                const trkSynth = new Tone.PolySynth(Tone.Synth, { 
+                    maxPolyphony: 512, 
+                    envelope: { attack: params.attack, sustain: params.sustain, release: params.release } 
+                }).connect(compressor);
+                trkSynth.volume.value = params.volume;
+                trackSynths.push(trkSynth);
+                
+                const part = new Tone.Part((time, note) => {
+                    trkSynth.triggerAttackRelease(note.name, note.duration, time, note.velocity);
+                    Tone.Draw.schedule(() => updateVisualsAtTime(Tone.Transport.seconds), time);
+                }, track.notes).start(0);
+                activeParts.push(part);
+            });
+            Tone.Transport.start();
+            isPaused = false;
+            document.getElementById('pause-btn').disabled = false;
+            document.getElementById('pause-btn').innerText = "暂停";
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function updateVisualsAtTime(seconds) {
+        if (!currentMidiData) return;
+        const newActive = new Set();
+        currentMidiData.tracks.forEach(track => {
+            track.notes.forEach(note => {
+                if (seconds >= note.time && seconds <= note.time + note.duration) {
+                    const idx = note.midi - params.baseNote;
+                    if (idx >= 0 && idx < allNotePoints.length) newActive.add(idx);
+                }
+            });
+        });
+
+        keyNodes.forEach(kn => kn?.classList.remove('active'));
+        newActive.forEach(idx => keyNodes[idx + params.baseNote]?.classList.add('active'));
+
+        allNotePoints.forEach((p, i) => {
+            const isActive = newActive.has(i);
+            if (isActive !== activeIndices.has(i)) {
+                isActive ? (p.material.color.set(0x00ffff), p.scale.set(1.5, 1.5, 1.5)) 
+                         : (p.material.color.set(0x444444), p.scale.set(1, 1, 1));
+            }
+        });
+        activeIndices = newActive;
+        refreshPolygon();
+
+        const m = Math.floor(seconds/60), s = Math.floor(seconds%60);
+        document.getElementById('time-display').innerText = `${m}:${s<10?'0'+s:s}`;
+    }
+
+    const progressWrapper = document.getElementById('progress-wrapper');
+    const handleProgressUpdate = (e) => {
+        if (!midiDuration) return;
+        const rect = progressWrapper.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const targetTime = pct * midiDuration;
+        
+        Tone.Transport.seconds = targetTime;
+        document.getElementById('progress-fill').style.width = (pct * 100) + '%';
+        updateVisualsAtTime(targetTime); 
+    };
+
+    progressWrapper.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        handleProgressUpdate(e);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (isDragging) handleProgressUpdate(e);
+    });
+
+    window.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
+
+    function identifyChord(midiNotes) {
+        const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const pcs = [...new Set(midiNotes.map(m => m % 12))].sort((a, b) => a - b);
+        if (pcs.length === 0) return "";
+        
+        const dictionary = {
+            "4,7": "Maj", "3,7": "min", "4,8": "aug", "3,6": "dim",
+            "2,7": "sus2", "5,7": "sus4", "4,7,10": "7", "4,7,11": "Maj7",
+            "3,7,10": "min7", "3,7,11": "mMaj7", "3,6,9": "dim7", "3,6,10": "m7b5"
+        };
+
+        for (let i = 0; i < pcs.length; i++) {
+            let root = pcs[i];
+            let intervals = pcs.map(p => (p - root + 12) % 12).filter(v => v !== 0).sort((a,b)=>a-b).join(',');
+            if (dictionary[intervals]) return noteNames[root] + dictionary[intervals];
+        }
+        return noteNames[pcs[0]]; 
+    }
+
+    function saveCurrentChord() {
+        if (activeIndices.size < 2) return; 
+
+        const sortedMidi = Array.from(activeIndices)
+            .map(idx => idx + params.baseNote)
+            .sort((a, b) => a - b);
+        
+        const fingerprint = sortedMidi.join(',');
+        if (savedFingerprints.has(fingerprint)) return;
+        
+        savedFingerprints.add(fingerprint);
+        const timePos = Tone.Transport.seconds;
+        const fullNoteNames = sortedMidi.map(m => Tone.Frequency(m, "midi").toNote());
+        const chordLabel = identifyChord(sortedMidi);
+
+        if (trackSynths[0]) {
+            trackSynths[0].triggerAttackRelease(fullNoteNames, "8n");
+        }
+
+        const item = document.createElement('div');
+        item.className = 'chord-item';
+        item.innerHTML = `
+            <div style="flex:1; overflow:hidden;">
+                <b style="color:#00ffff; font-size:13px;">${chordLabel}</b>
+                <span style="color:#eee; font-size:10px; margin-left:5px; opacity:0.7;">${fullNoteNames.join(' ')}</span>
+                <br>
+                <small style="opacity:0.4; font-size:9px;">@ ${document.getElementById('time-display').innerText}</small>
+            </div>
+            <span class="del-btn">✕</span>
+        `;
+        
+        item.onclick = () => {
+            Tone.Transport.seconds = timePos;
+            updateVisualsAtTime(timePos);
+            document.getElementById('progress-fill').style.width = `${(timePos/midiDuration)*100}%`;
+            if(trackSynths[0]) trackSynths[0].triggerAttackRelease(fullNoteNames, "2n");
+        };
+        
+        item.querySelector('.del-btn').onclick = (e) => {
+            e.stopPropagation();
+            savedFingerprints.delete(fingerprint);
+            item.remove();
+        };
+        
+        document.getElementById('chord-items').prepend(item);
+    }
+
+    window.addEventListener('mousedown', (e) => {
+        if (e.clientX < window.innerWidth - 300 && e.clientY < window.innerHeight - 150 && e.clientY > 80) {
+            saveCurrentChord();
+        }
+    });
+
+    function buildModel() {
+        allNotePoints.forEach(p => scene.remove(p));
+        allNotePoints = []; if(spiralLine) scene.remove(spiralLine);
+        const total = params.octaves * 12;
+        const pts = [];
+        for (let i = 0; i <= total; i++) {
+            const theta = (i / 12) * Math.PI * 2, r = params.initialRadius + (i / 12) * params.growthRate * 12, y = (i / 12) * params.heightStep;
+            const pos = new THREE.Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r);
+            pts.push(pos);
+            if (i < total) {
+                // 使用 params.nodeSize 动态控制球体大小
+                const s = new THREE.Mesh(new THREE.SphereGeometry(params.nodeSize, 8, 8), new THREE.MeshPhongMaterial({ color: 0x444444 }));
+                s.position.copy(pos); scene.add(s); allNotePoints.push(s);
+            }
+        }
+        spiralLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x333333 }));
+        scene.add(spiralLine);
+
+        // 状态同步逻辑：确保重建后该亮的依然亮
+        activeIndices.forEach(idx => {
+            if (allNotePoints[idx]) {
+                allNotePoints[idx].material.color.set(0x00ffff);
+                allNotePoints[idx].scale.set(1.5, 1.5, 1.5);
+            }
+        });
+
+        refreshPolygon();
+    }
+
+    function refreshPolygon() {
+        if (polygonMesh) { scene.remove(polygonMesh); polygonMesh.geometry.dispose(); }
+        const sorted = Array.from(activeIndices).sort((a, b) => a - b);
+        if (sorted.length < 3) return;
+        const vertices = [];
+        const pos = sorted.map(i => allNotePoints[i].position);
+        for (let i = 1; i < pos.length - 1; i++) {
+            vertices.push(pos[0].x, pos[0].y, pos[0].z, pos[i].x, pos[i].y, pos[i].z, pos[i+1].x, pos[i+1].y, pos[i+1].z);
+        }
+        const geo = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        polygonMesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: params.polyOpacity, emissive: 0x002222 }));
+        scene.add(polygonMesh);
+    }
+
+    function createGUI() {
+        const gui = new GUI();
+        const f1 = gui.addFolder('几何与展示');
+        f1.add(params, 'initialRadius', 0, 5).name('基圆半径').onChange(buildModel);
+        f1.add(params, 'growthRate', 0, 0.2).name('螺旋增长率').onChange(buildModel);
+        f1.add(params, 'heightStep', 0, 5).name('高度跨度').onChange(buildModel);
+        f1.add(params, 'octaves', 1, 12, 1).name('音域八度').onChange(buildModel);
+        f1.add(params, 'rotationSpeed', 0, 0.02, 0.0001).name('旋转速度');
+        
+        // --- 新增视觉控制项 ---
+        f1.add(params, 'nodeSize', 0.05, 0.5).name('节点大小').onChange(buildModel);
+        f1.addColor(params, 'bgColor').name('背景颜色').onChange(color => {
+            scene.background.set(color);
+        });
+        
+        const f2 = gui.addFolder('音色包络');
+        f2.add(params, 'attack', 0, 1).name('Attack');
+        f2.add(params, 'sustain', 0, 1).name('Sustain');
+        f2.add(params, 'release', 0, 5).name('Release');
+        f2.add(params, 'volume', -60, 0).name('音量').onChange(v => trackSynths.forEach(s=>s.volume.value = v));
+    }
+
+    window.togglePause = function() {
+        if (Tone.Transport.state === 'started') { Tone.Transport.pause(); isPaused = true; document.getElementById('pause-btn').innerText = "继续"; }
+        else { Tone.Transport.start(); isPaused = false; document.getElementById('pause-btn').innerText = "暂停"; }
+    }
+
+    function init() {
+        camera.position.set(25, 20, 25);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+        new OrbitControls(camera, renderer.domElement);
+        scene.background = new THREE.Color(params.bgColor);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        buildModel();
+        createGUI();
+        document.getElementById('midi-upload').onchange = playMidi;
+        animate();
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        if (midiDuration > 0) {
+            const cur = Tone.Transport.seconds;
+            if (Tone.Transport.state === "started") {
+                scene.rotation.y += params.rotationSpeed;
+                document.getElementById('progress-fill').style.width = `${(cur/midiDuration)*100}%`;
+                updateVisualsAtTime(cur);
+            }
+        }
+        renderer.render(scene, camera);
+    }
+</script>
+</body>
+</html>
